@@ -24,18 +24,19 @@ export default function SignIn() {
       console.log(user)
       navigate("/admin")
       // IdP data available using getAdditionalUserInfo(result)
-      // ...
+      // Auth token to local variable
+      localStorage.setItem("authToken", user.accessToken);
+
     }).catch((error) => {
       // Handle Errors here.
       const errorCode = error.code;
       const errorMessage = error.message;
-      // The email of the user's account used.
+      // The email of the user's account used'''''''''''''''''''''''''''''''''''''''''''''''' '.'''''''''''''''''''''''''''''''''''''''''''''''''
       const email = error.customData.email;
       // The AuthCredential type that was used.
       const credential = GoogleAuthProvider.credentialFromError(error);
-
-      
       // ...
+
     });
     
   }

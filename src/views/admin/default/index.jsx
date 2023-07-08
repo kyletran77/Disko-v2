@@ -16,42 +16,113 @@ import TaskCard from "views/admin/default/components/TaskCard";
 import tableDataCheck from "./variables/tableDataCheck.json";
 import tableDataComplex from "./variables/tableDataComplex.json";
 
+import { auth } from "../../../firebase/firebase";
+import { useSelector } from "react-redux";
+import { getUser } from "../../../firebase/firebase-calls";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 const Dashboard = () => {
+  //Data from the old dashboard
+  const options = { month: 'long', day: 'numeric' , hour: 'numeric', minute: 'numeric'};
+
+  const {allCircles} = useSelector((State) => State.allCircles);
+  const [userData, setUserData] = useState([])
+
+  //add check for authentication
+  const navigate = useNavigate();
+  const authToken = localStorage.getItem("authToken");
+  if (!authToken) {navigate("/auth")}
+  //
+  const currentUser = auth?.currentUser
+  console.log("current user:" + currentUser.displayName);
+
+  var eventViews = 0;
+  var responses = 0;
+  var yes = 0;
+  var no = 0;
+  var maybe = 0;
+  var allResponses = []
+
+  const filteredCircles = allCircles?.filter(
+      (circle) => circle.circleCreator === currentUser?.uid
+  );
+  
+  filteredCircles.map((circle)=>{
+      eventViews+=circle.views;
+      responses+=circle.memberCount.length;
+      allResponses.push(circle.memberCount)
+     
+  })
+
+  allResponses = allResponses.flatMap(array => array)
+  allResponses.forEach((response) => {
+      const choice = response.response;
+      if (choice === "Yes") {
+        yes += 1;
+      } else if (choice === "No") {
+        no += 1;
+      } else if (choice === "Maybe") {
+        maybe += 1;
+      }
+    });
+
+  const { maxCircle, maxRatio } = filteredCircles.reduce((acc, circle) => {
+      const ratio = circle.memberCount.length / circle.views;
+      if (ratio > acc.maxRatio) {
+        return { maxCircle: circle?.circleName, maxRatio: ratio };
+      } else {
+        return acc;
+      }
+    }, { maxCircle: null, maxRatio: 0 });
+    useEffect(
+      () => {
+        if (userData.length == 0) {
+          getUser(currentUser, setUserData);
+          
+        }
+      },
+      // eslint-disable-next-line
+      [currentUser]
+    );
+  
+console.log(eventViews)
+
   return (
     <div>
       {/* Card widget */}
 
       <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
-        <Widget
-          icon={<MdBarChart className="h-7 w-7" />}
-          title={"Earnings"}
-          subtitle={"$340.5"}
-        />
-        <Widget
-          icon={<IoDocuments className="h-6 w-6" />}
-          title={"Spend this month"}
-          subtitle={"$642.39"}
-        />
-        <Widget
-          icon={<MdBarChart className="h-7 w-7" />}
-          title={"Sales"}
-          subtitle={"$574.34"}
-        />
-        <Widget
-          icon={<MdDashboard className="h-6 w-6" />}
-          title={"Your Balance"}
-          subtitle={"$1,000"}
-        />
-        <Widget
-          icon={<MdBarChart className="h-7 w-7" />}
-          title={"New Tasks"}
-          subtitle={"145"}
-        />
-        <Widget
-          icon={<IoMdHome className="h-6 w-6" />}
-          title={"Total Projects"}
-          subtitle={"$2433"}
-        />
+      <Widget
+      icon={<MdBarChart className="h-7 w-7" />}
+      title={"Profile Views"}
+      subtitle={userData?.views ? userData.views : 0}
+    />
+    <Widget
+      icon={<IoDocuments className="h-6 w-6" />}
+      title={"Event Views"}
+      subtitle={eventViews}
+    />
+    <Widget
+      icon={<MdBarChart className="h-7 w-7" />}
+      title={"Event Responses"}
+      subtitle={responses}
+    />
+    <Widget
+      icon={<MdDashboard className="h-6 w-6" />}
+      title={"CTR (Click Through Rate)"}
+      subtitle={`${(responses/eventViews * 100).toFixed(2)}%`}
+    />
+    <Widget
+      icon={<MdBarChart className="h-7 w-7" />}
+      title={"Number of Events"}
+      subtitle={filteredCircles?.length}
+    />
+    <Widget
+      icon={<IoMdHome className="h-6 w-6" />}
+      title={"Best CTR Event"}
+      subtitle={`${maxCircle} @ ${(maxRatio * 100).toFixed(2)}% CTR`}
+    />
       </div>
 
       {/* Charts */}

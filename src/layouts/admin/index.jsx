@@ -9,15 +9,24 @@ import { auth } from "../../firebase/firebase";
 import { useSelector } from "react-redux";
 import { getUser } from "../../firebase/firebase-calls";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 
 export default function Admin(props) {
   //Data from the old dashboard
   const options = { month: 'long', day: 'numeric' , hour: 'numeric', minute: 'numeric'};
-  const currentUser = auth?.currentUser
+
   const {allCircles} = useSelector((State) => State.allCircles);
   const [userData, setUserData] = useState([])
+
+  //add check for authentication
+  const navigate = useNavigate();
+  const authToken = localStorage.getItem("authToken");
+  if (!authToken) {navigate("/auth")}
+  //
+  const currentUser = auth?.currentUser
+  console.log("current user:" + currentUser.displayName);
 
   var eventViews = 0;
   var responses = 0;
@@ -126,7 +135,7 @@ console.log(eventViews)
   document.documentElement.dir = "ltr";
   return (
     <div className="flex h-full w-full">
-      <div>all circles:           {allCircles.map((circle) => (
+      <div>all circles:           {filteredCircles.map((circle) => (
             <li className="my-1 flex items-center gap-1" key={circle.circleID}>
               <img
                 src={

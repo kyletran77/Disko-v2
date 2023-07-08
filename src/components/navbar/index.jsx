@@ -23,12 +23,15 @@ const Navbar = (props) => {
   //get user
   const userData = auth?.currentUser;
 
+
   const handleSignout = () => {
     const auth = getAuth();
     signOut(auth).then(() => {
       // Sign-out successful.
       console.log('signed out!')
       navigate("/auth")
+      localStorage.removeItem("authToken");
+      console.log("auth token", localStorage.getItem("authToken"))
     }).catch((error) => {
       // An error happened.
       console.log(error.message)
